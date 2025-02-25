@@ -1,4 +1,4 @@
-name: Build MySQL Multi-arch Images
+name: Build Multi-arch MongoDB Images
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: registry.cn-beijing.aliyuncs.com
-  IMAGE_NAME: raspberrypi_xlw
+  IMAGE_NAME: raspberrypi_xlw/mongodb
 
 jobs:
   build:
@@ -30,11 +30,11 @@ jobs:
           password: ${{ secrets.ALIYUN_PASSWORD }}
 
       - name: Build and push
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v3
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:8.0
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest 
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} 

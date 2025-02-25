@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY: registry.cn-hangzhou.aliyuncs.com
-  IMAGE_NAME: your-namespace/mysql
+  REGISTRY: registry.cn-beijing.aliyuncs.com
+  IMAGE_NAME: raspberrypi_xlw
 
 jobs:
   build:

@@ -40,12 +40,12 @@ jobs:
           platforms: ${{ matrix.platform }}
           push: false
           load: true
-          tags: mongodb:${{ matrix.platform }}
+          tags: mongodb:${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
           
       - name: Save Docker image
         run: |
-          platform_tag=$(echo ${{ matrix.platform }} | tr '/' '-')
-          docker save mongodb:${{ matrix.platform }} | gzip > mongodb-${platform_tag}.tar.gz
+          platform_suffix="${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}"
+          docker save mongodb:${platform_suffix} | gzip > mongodb-${platform_suffix}.tar.gz
 
       - name: Create Release
         uses: softprops/action-gh-release@v1

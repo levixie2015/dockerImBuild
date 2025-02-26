@@ -1,23 +1,47 @@
-FROM ubuntu:20.04
+name: Build MongoDB Docker Images
 
-# 设置时区
-ENV TZ=Asia/Shanghai
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+on:
+  push:
+    tags:
+      - 'v*'
 
-# 安装MongoDB
-ARG MONGODB_VERSION=5.0
-RUN apt-get update && apt-get install -y wget gnupg \
-    && wget -qO - https://www.mongodb.org/static/pgp/server-${MONGODB_VERSION}.asc | apt-key add - \
-    && echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/${MONGODB_VERSION} multiverse" | tee /etc/apt/sources.list.d/mongodb-org-${MONGODB_VERSION}.list \
-    && apt-get update \
-    && apt-get install -y mongodb-org \
-    && rm -rf /var/lib/apt/lists/*
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-# 创建数据目录
-RUN mkdir -p /data/db
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
 
-# 暴露端口
-EXPOSE 27017
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
 
-# 启动MongoDB
-CMD ["mongod", "--bind_ip_all"] 
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/mongodb:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}/mongodb:latest
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false 
